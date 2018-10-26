@@ -1,4 +1,4 @@
-
+// SET_REMOTE: open remote to get job
 #include "stratum.h"
 #include <signal.h>
 #include <sys/resource.h>
@@ -231,7 +231,8 @@ int main(int argc, char **argv)
 
 #ifdef NO_EXCHANGE
 	// todo: init with a db setting or a yiimp shell command
-	g_autoexchange = false;
+// Alex SET_REMOTE
+//	g_autoexchange = false;
 #endif
 
 	char configfile[1024];
@@ -335,7 +336,8 @@ int main(int argc, char **argv)
 	pthread_t thread2;
 	pthread_create(&thread2, NULL, stratum_thread, NULL);
 
-	sleep(20);
+// Alex	SET_REMOTE sleep(20);
+	sleep(2);
 
 	while(!g_exiting)
 	{

@@ -102,6 +102,7 @@ bool remote_connect(YAAMP_REMOTE *remote)
 
 ////////////////////////////////////////////////////////////////////////////
 
+#define RECONNECT_DELAY                3
 void *remote_thread(void *p)
 {
 	YAAMP_REMOTE *remote = (YAAMP_REMOTE *)p;
@@ -114,8 +115,10 @@ void *remote_thread(void *p)
 	{
 		if(!remote_connected(remote))
 		{
-			debuglog("disconnected from %s:%d JOB%d\n", remote->host, remote->port, remote->id);
-			sleep(300);
+			// Alex, SET_REMOTE
+			debuglog("disconnected from %s:%d JOB%d, will connect after %ds\n", remote->host, remote->port, remote->id, RECONNECT_DELAY);
+			sleep(RECONNECT_DELAY);
+			// sleep(300);
 
 			if(remote->status == YAAMP_REMOTE_TERMINATE) break;
 			remote_connect(remote);
