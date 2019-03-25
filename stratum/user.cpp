@@ -170,6 +170,20 @@ void db_add_worker(YAAMP_DB *db, YAAMP_CLIENT *client)
 	client->workerid = (int)mysql_insert_id(&db->mysql);
 }
 
+// Alex, 2019-3-18, ESTIMATE_HASHRATE
+#define WRITE_PUT_URL_FMT "curl -i -XPOST \'http://%s:8086/write?db=mydb\' --data-binary \'proxy_runinfo,%s %s\' >/dev/null 2>/dev/null"
+int write_influxdb(char *tags, char *fields, ...)
+{
+    char command[1024+256] = "";
+
+    sprintf(command, WRITE_PUT_URL_FMT, g_influxdb_server, tags, fields);
+    //printf("Command: %s\n", command);
+    if (system(command) < 0)
+        return -1;
+
+	return 0;
+}
+
 void db_update_workers(YAAMP_DB *db)
 {
 	g_list_client.Enter();
@@ -180,12 +194,18 @@ void db_update_workers(YAAMP_DB *db)
 		if(!client->workerid) continue;
 
 		// Alex, 2019-3-18, ESTIMATE_HASHRATE
-		//
-		debuglog("debug: ---- [workerid: %d, version:%s, username:%s, password:%s, worker:%s]: speed: %.5f, \
-				difficulty: %.5f, share_per_minute:%f\n", \
-				client->workerid, client->version, client->username, client->password, client->worker, \
-				client->speed, client->difficulty_actual, client->shares_per_minute);
+		{ 
+			char tags[256] = "";
+			char fields[256] = "";
 
+			debuglog("debug: ---- [speed: %.5f, difficulty: %.5f, share_per_minute:%f]--[algo:%s, workerid: %d, version:%s, username:%s, password:%s, worker:%s]\n", \
+					client->speed, client->difficulty_actual, client->shares_per_minute, \
+					g_stratum_algo, client->workerid, client->version, client->username, client->password, client->worker);
+			snprintf(tags, sizeof(tags), "algo=%s,miner=%s,user=%s,pass=%s,worker=%s,workerid=%d", g_stratum_algo, client->version, client->username, client->password, client->worker, client->workerid);
+			snprintf(fields, sizeof(fields), "hashrate=%.5f,difficulty=%.5f,share_per_minute=%f", client->speed*1000000, client->difficulty_actual, client->shares_per_minute);
+			write_influxdb(tags, fields); // Alex, 2019-3-18
+		}
+		
 		if(client->speed < 0.00001)
 		{
 			clientlog(client, "speed %f", client->speed);

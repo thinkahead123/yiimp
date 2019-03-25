@@ -69,6 +69,7 @@ extern int g_tcp_port;
 
 extern char g_tcp_server[1024];
 extern char g_tcp_password[1024];
+extern char g_influxdb_server[1024];
 
 extern char g_sql_host[1024];
 extern char g_sql_database[1024];

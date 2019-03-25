@@ -18,6 +18,7 @@ int g_tcp_port;
 
 char g_tcp_server[1024];
 char g_tcp_password[1024];
+char g_influxdb_server[1024];
 
 char g_sql_host[1024];
 char g_sql_database[1024];
@@ -248,6 +249,8 @@ int main(int argc, char **argv)
 	g_tcp_port = iniparser_getint(ini, "TCP:port", 3333);
 	strcpy(g_tcp_server, iniparser_getstring(ini, "TCP:server", NULL));
 	strcpy(g_tcp_password, iniparser_getstring(ini, "TCP:password", NULL));
+
+	strcpy(g_influxdb_server, iniparser_getstring(ini, "MINEPROXY:influxdb_server", "localhost"));
 
 	strcpy(g_sql_host, iniparser_getstring(ini, "SQL:host", NULL));
 	strcpy(g_sql_database, iniparser_getstring(ini, "SQL:database", NULL));
