@@ -19,8 +19,8 @@ static bool job_assign_client(YAAMP_JOB *job, YAAMP_CLIENT *client, double maxha
 	RETURN_ON_CONDITION(maxhash > 0 && job->speed + client->speed > maxhash, true);
 
 	if(!g_autoexchange && maxhash >= 0. && client->coinid != job->coind->id) {
-		//debuglog("prevent client %c on %s, not the right coin\n",
-		//	client->username[0], job->coind->symbol);
+		debuglog("prevent client %c on %s, not the right coin\n",
+			client->username[0], job->coind->symbol);
 		return true;
 	}
 
@@ -38,10 +38,15 @@ static bool job_assign_client(YAAMP_JOB *job, YAAMP_CLIENT *client, double maxha
 //		RETURN_ON_CONDITION(client->difficulty_actual > remote->difficulty_actual, false);
 
 		double difficulty_remote = client->difficulty_remote;
+
+		debuglog("debug: [[[ Client: <%f>,  Remote: <%f> ]]] -------- \n", client->difficulty_actual, remote->difficulty_actual);
 		if(remote->difficulty_actual < client->difficulty_actual)
 		{
+			debuglog("debug:     <<<< check difficulty in\n");
 			RETURN_ON_CONDITION(client->difficulty_fixed, true);
-			RETURN_ON_CONDITION(remote->difficulty_actual*4 < client->difficulty_actual, true);
+			// Alex, 2019-3-8, Paused, NTD, will cause remote difficulty to set to client
+			// RETURN_ON_CONDITION(remote->difficulty_actual*4 < client->difficulty_actual, true);
+			debuglog("debug:     check difficulty out >>>>\n");
 
 			difficulty_remote = remote->difficulty_actual;
 		}
@@ -76,10 +81,13 @@ static bool job_assign_client(YAAMP_JOB *job, YAAMP_CLIENT *client, double maxha
 				RETURN_ON_CONDITION(i == YAAMP_JOB_MAXSUBIDS, false);
 			}
 
-			sprintf(client->extranonce1, "%s%02x", remote->nonce1, client->extranonce1_id);
-			client->extranonce2size = remote->nonce2size-1;
-			client->difficulty_remote = difficulty_remote;
+		// Alex, 2019-3-8, Paused, NTD }
 		}
+
+		sprintf(client->extranonce1, "%s%02x", remote->nonce1, client->extranonce1_id);
+		client->extranonce2size = remote->nonce2size-1;
+		client->difficulty_remote = difficulty_remote;
+		debuglog("debug:     ====1: set client->difficulty_remote:%f\n", client->difficulty_remote);
 
 		client->jobid_locked = job->id;
 	}
@@ -105,10 +113,10 @@ static bool job_assign_client(YAAMP_JOB *job, YAAMP_CLIENT *client, double maxha
 	job->speed += client->speed;
 	job->count++;
 
-//	debuglog(" assign %x, %f, %d, %s\n", job->id, client->speed, client->reconnecting, client->sock->ip);
+	debuglog("debug:     assign %x, %f, %d, %s\n", job->id, client->speed, client->reconnecting, client->sock->ip);
 	if(strcmp(client->extranonce1, client->extranonce1_last) || client->extranonce2size != client->extranonce2size_last)
 	{
-//		debuglog("new nonce %x %s %s\n", job->id, client->extranonce1_last, client->extranonce1);
+		debuglog("debug:     !!!new nonce %x %s %s!!!\n", job->id, client->extranonce1_last, client->extranonce1);
 		if(!client->extranonce_subscribe)
 		{
 			strcpy(client->extranonce1_reconnect, client->extranonce1);
@@ -171,7 +179,8 @@ void job_assign_clients(YAAMP_JOB *job, double maxhash)
 	if(job->remote)	for(CLI li = g_list_client.first; li; li = li->next)
 	{
 		YAAMP_CLIENT *client = (YAAMP_CLIENT *)li->data;
-		if(!client->extranonce_subscribe) continue;
+		// Alex, 2019-3-8, let all client go into job_assign_client
+		// if(!client->extranonce_subscribe) continue;
 
 		bool b = job_assign_client(job, client, maxhash);
 		if(!b) break;
@@ -258,7 +267,6 @@ void job_signal()
 
 void job_update()
 {
-//	debuglog("job_update()\n");
 	job_reset_clients();
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -300,7 +308,7 @@ void job_update()
 		if(client->deleted) continue;
 		if(client->jobid_next) continue;
 
-		debuglog("clients with no job\n");
+		debuglog("debug: !!!clients with no job!!!\n");
 		g_current_algo->overflow = true;
 
 		if(!g_list_coind.first) break;
@@ -323,7 +331,7 @@ void job_update()
 
 //	usleep(100*YAAMP_MS);
 
-//	int ready = 0;
+	int ready = 0;
 //	debuglog("job_update\n");
 
 	g_list_job.Enter();
@@ -333,10 +341,10 @@ void job_update()
 		if(!job_can_mine(job)) continue;
 
 		job_broadcast(job);
-//		ready++;
+		ready++;
 	}
 
-//	debuglog("job_update %d / %d jobs\n", ready, g_list_job.count);
+	debuglog("debug:     job_update %d / %d jobs\n", ready, g_list_job.count);
 	g_list_job.Leave();
 
 }

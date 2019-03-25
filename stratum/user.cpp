@@ -179,6 +179,13 @@ void db_update_workers(YAAMP_DB *db)
 		if(client->deleted) continue;
 		if(!client->workerid) continue;
 
+		// Alex, 2019-3-18, ESTIMATE_HASHRATE
+		//
+		debuglog("debug: ---- [workerid: %d, version:%s, username:%s, password:%s, worker:%s]: speed: %.5f, \
+				difficulty: %.5f, share_per_minute:%f\n", \
+				client->workerid, client->version, client->username, client->password, client->worker, \
+				client->speed, client->difficulty_actual, client->shares_per_minute);
+
 		if(client->speed < 0.00001)
 		{
 			clientlog(client, "speed %f", client->speed);

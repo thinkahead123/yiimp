@@ -124,6 +124,8 @@ void job_broadcast(YAAMP_JOB *job)
 		client->jobid_sent = job->id;
 		client_add_job_history(client, job->id);
 
+		// Alex, 2019-3-8
+		debuglog("debug:     client_adjust_difficulty in job_broadcast!\n");
 		client_adjust_difficulty(client);
 
 		setsockopt(client->sock->sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
@@ -158,7 +160,7 @@ void job_broadcast(YAAMP_JOB *job)
 	if (templ->nbits && !coin_target) coin_target = 0xFFFF000000000000ULL; // under decode_compact min diff
 	double coin_diff = target_to_diff(coin_target);
 
-	debuglog("%s %d - diff %.9f job %x to %d/%d/%d clients, hash %.3f/%.3f in %.1f ms\n", job->name,
+	debuglog("debug:     %s %d - diff %.9f job %x to %d/%d/%d clients, hash %.3f/%.3f in %.1f ms\n", job->name,
 		templ->height, coin_diff, job->id, count, job->count, g_list_client.count, job->speed, job->maxspeed, 0.1*(s2-s1));
 
 //	for(int i=0; i<templ->auxs_size; i++)

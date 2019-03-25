@@ -35,7 +35,7 @@ void client_change_difficulty(YAAMP_CLIENT *client, double difficulty)
 	difficulty = client_normalize_difficulty(difficulty);
 	if(difficulty <= 0) return;
 
-//	debuglog("change diff to %f %f\n", difficulty, client->difficulty_actual);
+	debuglog("change diff to %f %f\n", difficulty, client->difficulty_actual);
 	if(difficulty == client->difficulty_actual) return;
 
 	uint64_t user_target = diff_to_target(difficulty);
@@ -49,9 +49,11 @@ void client_change_difficulty(YAAMP_CLIENT *client, double difficulty)
 void client_adjust_difficulty(YAAMP_CLIENT *client)
 {
 	if(client->difficulty_remote) {
+		debuglog("debug:     ====2: use difficult_remote to client %f\n", client->difficulty_remote);
 		client_change_difficulty(client, client->difficulty_remote);
 		return;
 	}
+	debuglog("debug:     ====3: use (%f) to calc difficulty to client\n", client->difficulty_actual);
 
 	if(client->shares_per_minute > 100)
 		client_change_difficulty(client, client->difficulty_actual*4);
